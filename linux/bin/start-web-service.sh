@@ -13,6 +13,7 @@ fi
 
 export MIANOTES_DATA_DIR="${MIANOTES_DATA_DIR:-/var/lib/mianotes/data}"
 export MIANOTES_STORAGE_CONFIG_PATH="${MIANOTES_STORAGE_CONFIG_PATH:-/var/lib/mianotes/storage.json}"
+export MIANOTES_ENV_FILE="${MIANOTES_ENV_FILE:-$ENV_FILE}"
 export MIANOTES_HOST="${MIANOTES_HOST:-0.0.0.0}"
 export MIANOTES_PORT="${MIANOTES_PORT:-8200}"
 
