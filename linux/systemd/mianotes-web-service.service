@@ -1,0 +1,17 @@
+[Unit]
+Description=Mianotes web service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mianotes
+Group=mianotes
+WorkingDirectory=/opt/mianotes/web-service
+EnvironmentFile=-/etc/mianotes/mianotes.env
+ExecStart=/opt/mianotes/bin/start-web-service.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

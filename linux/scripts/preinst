@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl stop mianotes-dashboard.service 2>/dev/null || true
+  systemctl stop mianotes-web-service.service 2>/dev/null || true
+fi
+
+exit 0

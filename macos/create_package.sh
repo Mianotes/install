@@ -10,6 +10,9 @@ PAYLOAD_DIR="$BUILD_DIR/payload"
 SOURCE_DIR="$BUILD_DIR/source"
 PACKAGE_VERSION="${MIANOTES_PACKAGE_VERSION:-${GITHUB_REF_NAME:-0.1.0}}"
 PACKAGE_VERSION="${PACKAGE_VERSION#v}"
+if [[ ! "$PACKAGE_VERSION" =~ ^[0-9][A-Za-z0-9.+_-]*$ ]]; then
+  PACKAGE_VERSION="0.1.0"
+fi
 WEB_SERVICE_REPO="${MIANOTES_WEB_SERVICE_REPO:-https://github.com/Mianotes/mianotes-web-service.git}"
 DASHBOARD_REPO="${MIANOTES_DASHBOARD_REPO:-https://github.com/Mianotes/mianotes-dashboard.git}"
 WEB_SERVICE_REF="${MIANOTES_WEB_SERVICE_REF:-${MIANOTES_REF:-main}}"

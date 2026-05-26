@@ -1,0 +1,16 @@
+[Unit]
+Description=Mianotes dashboard
+After=network-online.target mianotes-web-service.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mianotes
+Group=mianotes
+WorkingDirectory=/opt/mianotes/dashboard
+ExecStart=/opt/mianotes/bin/start-dashboard.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COMMAND="${1:-open}"
+
+case "$COMMAND" in
+  open)
+    if command -v xdg-open >/dev/null 2>&1; then
+      xdg-open "http://127.0.0.1:8201" >/dev/null 2>&1 &
+    else
+      echo "Open http://127.0.0.1:8201 in your browser."
+    fi
+    ;;
+  status)
+    systemctl status mianotes-web-service.service mianotes-dashboard.service
+    ;;
+  start)
+    sudo systemctl start mianotes-web-service.service mianotes-dashboard.service
+    ;;
+  stop)
+    sudo systemctl stop mianotes-dashboard.service mianotes-web-service.service
+    ;;
+  restart)
+    sudo systemctl restart mianotes-web-service.service mianotes-dashboard.service
+    ;;
+  logs)
+    journalctl -u mianotes-web-service.service -u mianotes-dashboard.service -n 120 --no-pager
+    ;;
+  *)
+    cat <<'USAGE'
+Usage: mianotes [open|status|start|stop|restart|logs]
+USAGE
+    exit 2
+    ;;
+esac

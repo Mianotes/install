@@ -47,6 +47,61 @@ The local build output is:
 dist/mianotes.pkg
 ```
 
+## Ubuntu package
+
+Ubuntu users can download the Debian package from the latest release:
+
+```text
+https://github.com/Mianotes/install/releases/latest/download/mianotes.deb
+```
+
+Install it with:
+
+```bash
+sudo apt install ./mianotes.deb
+```
+
+The package installs Mianotes into standard Linux locations:
+
+```text
+/opt/mianotes/
+/etc/mianotes/mianotes.env
+/lib/systemd/system/mianotes-web-service.service
+/lib/systemd/system/mianotes-dashboard.service
+/usr/bin/mianotes
+/var/lib/mianotes/
+```
+
+After installation, Mianotes runs as two systemd services:
+
+- `mianotes-web-service` on port `8200`
+- `mianotes-dashboard` on port `8201`
+
+The installer creates a Python virtual environment and installs the web service
+dependencies during package installation, so the first install needs internet
+access.
+
+Open the app with:
+
+```bash
+mianotes open
+```
+
+The package is built automatically by GitHub Actions when a `v*` tag is pushed.
+The workflow also supports manual runs from the GitHub Actions tab.
+
+Build locally on Ubuntu:
+
+```bash
+./linux/create_deb.sh
+```
+
+The local build output is:
+
+```text
+dist/mianotes.deb
+```
+
 ## macOS and Linux
 
 Run this from the folder where you want Mianotes installed:
