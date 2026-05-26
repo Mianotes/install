@@ -20,6 +20,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
 MIANOTES_HOST=0.0.0.0
 MIANOTES_PORT=8200
 MIANOTES_DATA_DIR=$DATA_DIR
+MIANOTES_STORAGE_CONFIG_PATH=/var/lib/mianotes/storage.json
 ENV
 fi
 
@@ -31,6 +32,7 @@ set +a
 export MIANOTES_HOST="${MIANOTES_HOST:-0.0.0.0}"
 export MIANOTES_PORT="${MIANOTES_PORT:-8200}"
 export MIANOTES_DATA_DIR="${MIANOTES_DATA_DIR:-$DATA_DIR}"
+export MIANOTES_STORAGE_CONFIG_PATH="${MIANOTES_STORAGE_CONFIG_PATH:-/var/lib/mianotes/storage.json}"
 
 python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/python" -m pip install --upgrade pip
@@ -42,6 +44,7 @@ runuser -u mianotes -- env \
   MIANOTES_HOST="$MIANOTES_HOST" \
   MIANOTES_PORT="$MIANOTES_PORT" \
   MIANOTES_DATA_DIR="$MIANOTES_DATA_DIR" \
+  MIANOTES_STORAGE_CONFIG_PATH="$MIANOTES_STORAGE_CONFIG_PATH" \
   "$VENV_DIR/bin/mianotes-web-service" init-db
 
 chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" /usr/bin/mianotes
