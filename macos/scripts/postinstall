@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="/Library/Application Support/Mianotes"
+WEB_SERVICE_DIR="$APP_ROOT/web-service"
+VENV_DIR="$APP_ROOT/.venv"
+ENV_DIR="$APP_ROOT/env"
+ENV_FILE="$ENV_DIR/mianotes.env"
+LOG_DIR="/Library/Logs/Mianotes"
+DATA_DIR="$APP_ROOT/data"
+
+find_python() {
+  if [[ -n "${PYTHON:-}" && -x "${PYTHON:-}" ]]; then
+    echo "$PYTHON"
+    return
+  fi
+
+  for candidate in /opt/homebrew/bin/python3.12 /usr/local/bin/python3.12 python3.12 /opt/homebrew/bin/python3.11 /usr/local/bin/python3.11 python3.11 python3; do
+    if command -v "$candidate" >/dev/null 2>&1 \
+      && "$candidate" -c 'import sys; raise SystemExit(sys.version_info < (3, 11))' >/dev/null 2>&1; then
+      command -v "$candidate"
+      return
+    fi
+  done
+
+  cat >&2 <<'PYTHON_MISSING'
+Mianotes requires Python 3.11 or newer.
+Install Python 3.11+ from https://www.python.org/downloads/macos/ or Homebrew, then run this package again.
+PYTHON_MISSING
+  exit 1
+}
+
+PYTHON_BIN="$(find_python)"
+
+mkdir -p "$APP_ROOT" "$ENV_DIR" "$LOG_DIR" "$DATA_DIR" /usr/local/bin
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  cat > "$ENV_FILE" <<ENV
+MIANOTES_HOST=0.0.0.0
+MIANOTES_PORT=8200
+MIANOTES_DATA_DIR=$DATA_DIR
+ENV
+fi
+
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+export MIANOTES_HOST="${MIANOTES_HOST:-0.0.0.0}"
+export MIANOTES_PORT="${MIANOTES_PORT:-8200}"
+export MIANOTES_DATA_DIR="${MIANOTES_DATA_DIR:-$DATA_DIR}"
+
+if [[ ! -d "$VENV_DIR" ]]; then
+  "$PYTHON_BIN" -m venv "$VENV_DIR"
+fi
+
+"$VENV_DIR/bin/python" -m pip install --upgrade pip
+"$VENV_DIR/bin/python" -m pip install "$WEB_SERVICE_DIR"
+"$VENV_DIR/bin/mianotes-web-service" init-db
+
+chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" /usr/local/bin/mianotes
+chmod 644 /Library/LaunchDaemons/com.mianotes.web-service.plist /Library/LaunchDaemons/com.mianotes.dashboard.plist
+chown root:wheel /Library/LaunchDaemons/com.mianotes.web-service.plist /Library/LaunchDaemons/com.mianotes.dashboard.plist
+
+launchctl bootstrap system /Library/LaunchDaemons/com.mianotes.web-service.plist 2>/dev/null || true
+launchctl bootstrap system /Library/LaunchDaemons/com.mianotes.dashboard.plist 2>/dev/null || true
+launchctl kickstart -k system/com.mianotes.web-service || true
+launchctl kickstart -k system/com.mianotes.dashboard || true
+
+exit 0

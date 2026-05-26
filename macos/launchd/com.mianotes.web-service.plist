@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.mianotes.web-service</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Library/Application Support/Mianotes/bin/start-web-service.sh</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Library/Logs/Mianotes/web-service.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Library/Logs/Mianotes/web-service.err.log</string>
+  <key>WorkingDirectory</key>
+  <string>/Library/Application Support/Mianotes/web-service</string>
+</dict>
+</plist>

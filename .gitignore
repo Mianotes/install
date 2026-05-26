@@ -1,2 +1,4 @@
 .DS_Store
 SPEC.md
+.build/
+dist/

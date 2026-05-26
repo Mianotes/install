@@ -1,6 +1,51 @@
 # Mianotes installer
 
-This repository provides the public bootstrap installer for Mianotes.
+This repository provides the public bootstrap installers and release package builders for Mianotes.
+
+## macOS package
+
+Most macOS users should download the package from the latest release:
+
+```text
+https://github.com/Mianotes/install/releases/latest/download/mianotes.pkg
+```
+
+The package installs Mianotes into default macOS locations:
+
+```text
+/Library/Application Support/Mianotes/
+/Library/LaunchDaemons/com.mianotes.web-service.plist
+/Library/LaunchDaemons/com.mianotes.dashboard.plist
+/usr/local/bin/mianotes
+```
+
+After installation, Mianotes runs as two launchd services:
+
+- `com.mianotes.web-service` on port `8200`
+- `com.mianotes.dashboard` on port `8201`
+
+Open the app with:
+
+```bash
+mianotes open
+```
+
+The package is built automatically by GitHub Actions when a `v*` tag is pushed.
+The workflow also supports manual runs from the GitHub Actions tab.
+The package is not signed or notarized yet; adding Apple Developer signing
+secrets to the workflow is the next step before broad public distribution.
+
+Build locally on macOS:
+
+```bash
+./macos/create_package.sh
+```
+
+The local build output is:
+
+```text
+dist/mianotes.pkg
+```
 
 ## macOS and Linux
 

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+launchctl bootout system /Library/LaunchDaemons/com.mianotes.dashboard.plist 2>/dev/null || true
+launchctl bootout system /Library/LaunchDaemons/com.mianotes.web-service.plist 2>/dev/null || true
+
+exit 0

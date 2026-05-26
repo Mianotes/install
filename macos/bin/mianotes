@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COMMAND="${1:-open}"
+
+case "$COMMAND" in
+  open)
+    open "http://127.0.0.1:8201"
+    ;;
+  status)
+    launchctl print system/com.mianotes.web-service || true
+    launchctl print system/com.mianotes.dashboard || true
+    ;;
+  start)
+    sudo launchctl kickstart -k system/com.mianotes.web-service
+    sudo launchctl kickstart -k system/com.mianotes.dashboard
+    ;;
+  stop)
+    sudo launchctl bootout system /Library/LaunchDaemons/com.mianotes.dashboard.plist 2>/dev/null || true
+    sudo launchctl bootout system /Library/LaunchDaemons/com.mianotes.web-service.plist 2>/dev/null || true
+    ;;
+  logs)
+    tail -n 80 /Library/Logs/Mianotes/web-service.log /Library/Logs/Mianotes/dashboard.log
+    ;;
+  *)
+    cat <<'USAGE'
+Usage: mianotes [open|status|start|stop|logs]
+USAGE
+    exit 2
+    ;;
+esac
