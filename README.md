@@ -102,6 +102,40 @@ The local build output is:
 dist/mianotes.deb
 ```
 
+## Release process
+
+The macOS and Ubuntu packages are built by GitHub Actions when a `v*` tag is
+pushed to this repository.
+
+```bash
+git tag v0.1.2
+git push origin v0.1.2
+```
+
+The tag name becomes the package version. For example, `v0.1.2` creates
+packages with version `0.1.2`.
+
+By default, the package builders clone `main` from these repositories:
+
+- `Mianotes/mianotes-web-service`
+- `Mianotes/mianotes-dashboard`
+
+Before creating a release tag, make sure both repositories have the intended
+release commits on `main`. The workflows build:
+
+- `dist/mianotes.pkg`
+- `dist/mianotes.deb`
+
+On tag builds, both files are attached to the GitHub Release. Users can install
+the latest release from:
+
+```text
+https://github.com/Mianotes/install/releases/latest/download/mianotes.pkg
+https://github.com/Mianotes/install/releases/latest/download/mianotes.deb
+```
+
+The package workflows can also be run manually from the GitHub Actions tab.
+
 ## macOS and Linux
 
 Run this from the folder where you want Mianotes installed:
