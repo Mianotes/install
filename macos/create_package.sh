@@ -85,7 +85,7 @@ NPM_BIN="$(find_npm)"
   else
     "$NPM_BIN" install
   fi
-  VITE_API_BASE_URL="http://127.0.0.1:8200" "$NPM_BIN" run build
+  "$NPM_BIN" run build
 )
 
 echo "Preparing package payload..."
@@ -95,11 +95,12 @@ mkdir -p "$APP_ROOT/bin" "$APP_ROOT/dashboard" "$PAYLOAD_DIR/Library/LaunchDaemo
 copy_tree "$SOURCE_DIR/web-service" "$APP_ROOT/web-service"
 copy_tree "$SOURCE_DIR/dashboard/dist" "$APP_ROOT/dashboard/dist"
 copy_tree "$ROOT_DIR/macos/bin" "$APP_ROOT/bin"
+cp "$ROOT_DIR/common/bin/dashboard_server.py" "$APP_ROOT/bin/dashboard_server.py"
 cp "$ROOT_DIR/macos/bin/mianotes" "$PAYLOAD_DIR/usr/local/bin/mianotes"
 cp "$ROOT_DIR/macos/launchd/com.mianotes.web-service.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.web-service.plist"
 cp "$ROOT_DIR/macos/launchd/com.mianotes.dashboard.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.dashboard.plist"
 
-chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" "$PAYLOAD_DIR/usr/local/bin/mianotes"
+chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" "$APP_ROOT/bin/dashboard_server.py" "$PAYLOAD_DIR/usr/local/bin/mianotes"
 chmod 644 "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.web-service.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.dashboard.plist"
 clean_payload_metadata
 

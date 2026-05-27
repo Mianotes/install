@@ -75,7 +75,7 @@ echo "Building dashboard..."
   else
     npm install
   fi
-  VITE_API_BASE_URL="http://127.0.0.1:8200" npm run build
+  npm run build
 )
 
 echo "Preparing Debian package payload..."
@@ -93,6 +93,7 @@ mkdir -p \
 copy_tree "$SOURCE_DIR/web-service" "$APP_ROOT/web-service"
 copy_tree "$SOURCE_DIR/dashboard/dist" "$APP_ROOT/dashboard/dist"
 copy_tree "$ROOT_DIR/linux/bin" "$APP_ROOT/bin"
+cp "$ROOT_DIR/common/bin/dashboard_server.py" "$APP_ROOT/bin/dashboard_server.py"
 cp "$ROOT_DIR/linux/bin/mianotes" "$PACKAGE_DIR/usr/bin/mianotes"
 cp "$ROOT_DIR/linux/systemd/mianotes-web-service.service" "$PACKAGE_DIR/lib/systemd/system/mianotes-web-service.service"
 cp "$ROOT_DIR/linux/systemd/mianotes-dashboard.service" "$PACKAGE_DIR/lib/systemd/system/mianotes-dashboard.service"
@@ -104,6 +105,7 @@ cp "$ROOT_DIR/linux/scripts/postrm" "$PACKAGE_DIR/DEBIAN/postrm"
 chmod 755 \
   "$APP_ROOT/bin/start-web-service.sh" \
   "$APP_ROOT/bin/start-dashboard.sh" \
+  "$APP_ROOT/bin/dashboard_server.py" \
   "$PACKAGE_DIR/usr/bin/mianotes" \
   "$PACKAGE_DIR/DEBIAN/preinst" \
   "$PACKAGE_DIR/DEBIAN/postinst" \

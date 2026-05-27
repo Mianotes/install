@@ -3,8 +3,20 @@ set -euo pipefail
 
 APP_ROOT="/Library/Application Support/Mianotes"
 DASHBOARD_DIR="$APP_ROOT/dashboard/dist"
+ENV_FILE="$APP_ROOT/env/mianotes.env"
 
-exec "$APP_ROOT/.venv/bin/python" \
-  -m http.server 8201 \
-  --bind 0.0.0.0 \
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  . "$ENV_FILE"
+  set +a
+fi
+
+API_PORT="${MIANOTES_PORT:-8200}"
+DASHBOARD_PORT="${MIANOTES_DASHBOARD_PORT:-8201}"
+
+exec "$APP_ROOT/.venv/bin/python" "$APP_ROOT/bin/dashboard_server.py" \
+  --host 0.0.0.0 \
+  --port "$DASHBOARD_PORT" \
+  --backend "http://127.0.0.1:$API_PORT" \
   --directory "$DASHBOARD_DIR"
