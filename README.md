@@ -36,6 +36,7 @@ Useful commands:
 mianotes status
 mianotes start
 mianotes stop
+mianotes doctor
 mianotes logs
 mianotes uninstall
 ```
@@ -114,6 +115,7 @@ mianotes status
 mianotes start
 mianotes stop
 mianotes restart
+mianotes doctor
 mianotes logs
 mianotes uninstall
 ```

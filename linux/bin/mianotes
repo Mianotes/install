@@ -2,10 +2,42 @@
 set -euo pipefail
 
 COMMAND="${1:-open}"
+APP_ROOT="/opt/mianotes"
+ENV_FILE="/etc/mianotes/mianotes.env"
+DATA_DIR="/var/lib/mianotes/data"
+WORKSPACES_CONFIG="/var/lib/mianotes/workspaces.json"
 
 require_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     exec sudo "$0" "$@"
+  fi
+}
+
+print_check() {
+  local label="$1"
+  local value="$2"
+
+  printf '  %-24s %s\n' "$label" "$value"
+}
+
+command_status() {
+  local name="$1"
+  local path
+
+  if path="$(command -v "$name" 2>/dev/null)"; then
+    print_check "$name" "$path"
+  else
+    print_check "$name" "missing"
+  fi
+}
+
+systemd_status() {
+  local service="$1"
+
+  if systemctl is-active --quiet "$service"; then
+    print_check "$service" "running"
+  else
+    print_check "$service" "not running"
   fi
 }
 
@@ -28,6 +60,41 @@ case "$COMMAND" in
     ;;
   restart)
     sudo systemctl restart mianotes-web-service.service mianotes-dashboard.service
+    ;;
+  doctor)
+    echo "Mianotes doctor"
+    echo
+    echo "Services"
+    if command -v systemctl >/dev/null 2>&1; then
+      systemd_status "mianotes-web-service.service"
+      systemd_status "mianotes-dashboard.service"
+    else
+      print_check "systemctl" "missing"
+    fi
+    echo
+    echo "Files"
+    [[ -d "$APP_ROOT" ]] && print_check "app root" "$APP_ROOT" || print_check "app root" "missing"
+    [[ -d "$DATA_DIR" ]] && print_check "data" "$DATA_DIR" || print_check "data" "missing"
+    [[ -f "$WORKSPACES_CONFIG" ]] && print_check "workspaces" "$WORKSPACES_CONFIG" || print_check "workspaces" "missing"
+    [[ -f "$ENV_FILE" ]] && print_check "env" "$ENV_FILE" || print_check "env" "missing"
+    [[ -f /lib/systemd/system/mianotes-web-service.service ]] && print_check "web service unit" "/lib/systemd/system/mianotes-web-service.service" || print_check "web service unit" "missing"
+    [[ -f /lib/systemd/system/mianotes-dashboard.service ]] && print_check "dashboard unit" "/lib/systemd/system/mianotes-dashboard.service" || print_check "dashboard unit" "missing"
+    echo
+    echo "Tools"
+    if [[ -x "$APP_ROOT/.venv/bin/python" ]]; then
+      print_check "packaged python" "$("$APP_ROOT/.venv/bin/python" --version 2>&1)"
+    else
+      print_check "packaged python" "missing"
+    fi
+    command_status "python3"
+    command_status "rg"
+    command_status "ffmpeg"
+    command_status "ffprobe"
+    command_status "tesseract"
+    echo
+    echo "URLs"
+    print_check "dashboard" "http://127.0.0.1:8201"
+    print_check "api" "http://127.0.0.1:8200"
     ;;
   uninstall)
     require_root "$COMMAND"
@@ -62,7 +129,7 @@ UNINSTALLED
     ;;
   *)
     cat <<'USAGE'
-Usage: mianotes [open|status|start|stop|restart|uninstall|logs]
+Usage: mianotes [open|status|start|stop|restart|doctor|uninstall|logs]
 USAGE
     exit 2
     ;;
