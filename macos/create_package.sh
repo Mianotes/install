@@ -155,6 +155,7 @@ pkgbuild \
   --identifier "com.mianotes.installer" \
   --version "$PACKAGE_VERSION" \
   --root "$PAYLOAD_DIR" \
+  --install-location "/" \
   --scripts "$ROOT_DIR/macos/scripts" \
   --filter '(^|/)\._[^/]+$' \
   --filter '(^|/)\.DS_Store$' \

@@ -12,6 +12,52 @@ WORKSPACES_CONFIG="$APP_ROOT/workspaces.json"
 OLD_STORAGE_CONFIG="$APP_ROOT/storage.json"
 RUNTIME_ENV="$APP_ROOT/bin/runtime-env.sh"
 
+quote_env_value() {
+  local value="$1"
+  printf "'%s'" "$(printf '%s' "$value" | sed "s/'/'\\\\''/g")"
+}
+
+set_env_default() {
+  local key="$1"
+  local value="$2"
+  local quoted
+
+  quoted="$(quote_env_value "$value")"
+  if grep -q "^$key=" "$ENV_FILE"; then
+    return
+  fi
+  printf '%s=%s\n' "$key" "$quoted" >> "$ENV_FILE"
+}
+
+set_env_value() {
+  local key="$1"
+  local value="$2"
+  local quoted
+  local temporary
+
+  quoted="$(quote_env_value "$value")"
+  temporary="$(mktemp)"
+  if [[ -f "$ENV_FILE" ]]; then
+    awk -v key="$key" -v line="$key=$quoted" '
+      BEGIN { replaced = 0 }
+      index($0, key "=") == 1 {
+        print line
+        replaced = 1
+        next
+      }
+      { print }
+      END {
+        if (!replaced) {
+          print line
+        }
+      }
+    ' "$ENV_FILE" > "$temporary"
+  else
+    printf '%s=%s\n' "$key" "$quoted" > "$temporary"
+  fi
+  mv "$temporary" "$ENV_FILE"
+}
+
 if [[ -f "$RUNTIME_ENV" ]]; then
   # shellcheck source=/dev/null
   . "$RUNTIME_ENV"
@@ -45,12 +91,12 @@ if [[ ! -f "$ENV_FILE" ]]; then
   cat > "$ENV_FILE" <<ENV
 MIANOTES_HOST=0.0.0.0
 MIANOTES_PORT=8200
-MIANOTES_DATA_DIR=$DATA_DIR
-MIANOTES_STORAGE_CONFIG_PATH=$WORKSPACES_CONFIG
 ENV
-elif grep -qx "MIANOTES_STORAGE_CONFIG_PATH=$OLD_STORAGE_CONFIG" "$ENV_FILE"; then
-  sed -i '' "s|^MIANOTES_STORAGE_CONFIG_PATH=$OLD_STORAGE_CONFIG$|MIANOTES_STORAGE_CONFIG_PATH=$WORKSPACES_CONFIG|" "$ENV_FILE"
 fi
+set_env_default "MIANOTES_HOST" "0.0.0.0"
+set_env_default "MIANOTES_PORT" "8200"
+set_env_value "MIANOTES_DATA_DIR" "$DATA_DIR"
+set_env_value "MIANOTES_STORAGE_CONFIG_PATH" "$WORKSPACES_CONFIG"
 
 set -a
 # shellcheck disable=SC1090
