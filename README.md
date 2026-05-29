@@ -2,6 +2,15 @@
 
 This repository provides the public bootstrap installers and release package builders for Mianotes.
 
+Most users should install Mianotes with a platform package:
+
+- macOS: `mianotes.pkg`
+- Ubuntu: `mianotes.deb`
+
+The `install.sh` and `install.ps1` scripts are developer bootstrap installers.
+They clone the app repositories into the current folder and run each app's own
+development installer.
+
 ## macOS package
 
 Most macOS users should download the package from the latest release:
@@ -30,6 +39,12 @@ Open the app with:
 mianotes open
 ```
 
+Run a local health check with:
+
+```bash
+mianotes doctor
+```
+
 Useful commands:
 
 ```bash
@@ -47,6 +62,16 @@ your data, environment file, and workspace configuration under:
 ```text
 /Library/Application Support/Mianotes/
 ```
+
+For full search, file parsing, image OCR, and audio/video support on macOS,
+install the local tools Mianotes can use:
+
+```bash
+brew install python ripgrep ffmpeg tesseract
+```
+
+The package checks for Python 3.11+ during installation. `mianotes doctor`
+shows whether the optional parsing tools are available.
 
 The package is built automatically by GitHub Actions when a `v*` tag is pushed.
 The workflow also supports manual runs from the GitHub Actions tab.
@@ -106,6 +131,12 @@ Open the app with:
 
 ```bash
 mianotes open
+```
+
+Run a local health check with:
+
+```bash
+mianotes doctor
 ```
 
 Useful commands:
@@ -185,6 +216,9 @@ APPLE_NOTARY_KEY_BASE64
 ```
 
 ## macOS and Linux
+
+This section is for developers who want editable checkouts of the web service
+and dashboard.
 
 Run this from the folder where you want Mianotes installed:
 
