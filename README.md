@@ -30,6 +30,23 @@ Open the app with:
 mianotes open
 ```
 
+Useful commands:
+
+```bash
+mianotes status
+mianotes start
+mianotes stop
+mianotes logs
+mianotes uninstall
+```
+
+`mianotes uninstall` removes the app services and installed app files, but keeps
+your data, environment file, and workspace configuration under:
+
+```text
+/Library/Application Support/Mianotes/
+```
+
 The package is built automatically by GitHub Actions when a `v*` tag is pushed.
 The workflow also supports manual runs from the GitHub Actions tab.
 The release package is signed with a Developer ID Installer certificate,
@@ -81,12 +98,29 @@ After installation, Mianotes runs as two systemd services:
 The installer creates a Python virtual environment and installs the web service
 dependencies during package installation, so the first install needs internet
 access.
+The Debian package also installs the required system packages for parsing and
+searching notes, including `ripgrep`, `ffmpeg`, and `tesseract-ocr`.
 
 Open the app with:
 
 ```bash
 mianotes open
 ```
+
+Useful commands:
+
+```bash
+mianotes status
+mianotes start
+mianotes stop
+mianotes restart
+mianotes logs
+mianotes uninstall
+```
+
+`mianotes uninstall` removes the app services and installed app files, but keeps
+your data under `/var/lib/mianotes/` and environment configuration under
+`/etc/mianotes/`.
 
 The package is built automatically by GitHub Actions when a `v*` tag is pushed.
 The workflow also supports manual runs from the GitHub Actions tab.

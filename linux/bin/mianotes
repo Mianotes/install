@@ -3,6 +3,12 @@ set -euo pipefail
 
 COMMAND="${1:-open}"
 
+require_root() {
+  if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+    exec sudo "$0" "$@"
+  fi
+}
+
 case "$COMMAND" in
   open)
     if command -v xdg-open >/dev/null 2>&1; then
@@ -23,12 +29,40 @@ case "$COMMAND" in
   restart)
     sudo systemctl restart mianotes-web-service.service mianotes-dashboard.service
     ;;
+  uninstall)
+    require_root "$COMMAND"
+    if command -v dpkg-query >/dev/null 2>&1 \
+      && dpkg-query -W -f='${Status}' mianotes 2>/dev/null | grep -q "install ok installed"; then
+      if command -v apt-get >/dev/null 2>&1; then
+        apt-get remove -y mianotes
+      else
+        dpkg -r mianotes
+      fi
+    else
+      systemctl disable --now mianotes-dashboard.service 2>/dev/null || true
+      systemctl disable --now mianotes-web-service.service 2>/dev/null || true
+      rm -f /lib/systemd/system/mianotes-dashboard.service
+      rm -f /lib/systemd/system/mianotes-web-service.service
+      rm -rf /opt/mianotes
+      rm -f /usr/bin/mianotes
+      systemctl daemon-reload 2>/dev/null || true
+    fi
+    cat <<'UNINSTALLED'
+Mianotes has been uninstalled.
+
+Your data has been kept at:
+  /var/lib/mianotes
+
+Your environment configuration has also been kept at:
+  /etc/mianotes
+UNINSTALLED
+    ;;
   logs)
     journalctl -u mianotes-web-service.service -u mianotes-dashboard.service -n 120 --no-pager
     ;;
   *)
     cat <<'USAGE'
-Usage: mianotes [open|status|start|stop|restart|logs]
+Usage: mianotes [open|status|start|stop|restart|uninstall|logs]
 USAGE
     exit 2
     ;;

@@ -8,6 +8,8 @@ ENV_DIR="/etc/mianotes"
 ENV_FILE="$ENV_DIR/mianotes.env"
 DATA_DIR="/var/lib/mianotes/data"
 LOG_DIR="/var/log/mianotes"
+WORKSPACES_CONFIG="/var/lib/mianotes/workspaces.json"
+OLD_STORAGE_CONFIG="/var/lib/mianotes/storage.json"
 
 if ! id -u mianotes >/dev/null 2>&1; then
   useradd --system --home /var/lib/mianotes --shell /usr/sbin/nologin mianotes
@@ -15,13 +17,19 @@ fi
 
 mkdir -p "$ENV_DIR" "$DATA_DIR" "$LOG_DIR" /var/lib/mianotes
 
+if [[ ! -f "$WORKSPACES_CONFIG" && -f "$OLD_STORAGE_CONFIG" ]]; then
+  mv "$OLD_STORAGE_CONFIG" "$WORKSPACES_CONFIG"
+fi
+
 if [[ ! -f "$ENV_FILE" ]]; then
   cat > "$ENV_FILE" <<ENV
 MIANOTES_HOST=0.0.0.0
 MIANOTES_PORT=8200
 MIANOTES_DATA_DIR=$DATA_DIR
-MIANOTES_STORAGE_CONFIG_PATH=/var/lib/mianotes/storage.json
+MIANOTES_STORAGE_CONFIG_PATH=$WORKSPACES_CONFIG
 ENV
+elif grep -qx "MIANOTES_STORAGE_CONFIG_PATH=$OLD_STORAGE_CONFIG" "$ENV_FILE"; then
+  sed -i "s|^MIANOTES_STORAGE_CONFIG_PATH=$OLD_STORAGE_CONFIG$|MIANOTES_STORAGE_CONFIG_PATH=$WORKSPACES_CONFIG|" "$ENV_FILE"
 fi
 
 set -a
@@ -32,7 +40,7 @@ set +a
 export MIANOTES_HOST="${MIANOTES_HOST:-0.0.0.0}"
 export MIANOTES_PORT="${MIANOTES_PORT:-8200}"
 export MIANOTES_DATA_DIR="${MIANOTES_DATA_DIR:-$DATA_DIR}"
-export MIANOTES_STORAGE_CONFIG_PATH="${MIANOTES_STORAGE_CONFIG_PATH:-/var/lib/mianotes/storage.json}"
+export MIANOTES_STORAGE_CONFIG_PATH="${MIANOTES_STORAGE_CONFIG_PATH:-$WORKSPACES_CONFIG}"
 
 python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/python" -m pip install --upgrade pip
