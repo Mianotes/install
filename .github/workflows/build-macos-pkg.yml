@@ -76,6 +76,8 @@ jobs:
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
           security import "$CERTIFICATE_PATH" \
             -P "$CERTIFICATE_PASSWORD" \
             -A \
@@ -108,7 +110,6 @@ jobs:
       - name: Build package
         env:
           CODESIGN_IDENTITY: ${{ env.CODESIGN_IDENTITY }}
-          CODESIGN_KEYCHAIN: ${{ env.KEYCHAIN_PATH }}
         run: ./macos/create_package.sh
 
       - name: Sign package
