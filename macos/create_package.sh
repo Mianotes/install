@@ -81,6 +81,7 @@ clean_payload_metadata() {
 sign_runtime_payload() {
   local identity="${CODESIGN_IDENTITY:-}"
   local keychain="${CODESIGN_KEYCHAIN:-}"
+  local python_entitlements="$ROOT_DIR/macos/entitlements/python.plist"
 
   if [[ -z "$identity" ]]; then
     echo "Skipping bundled runtime code signing; CODESIGN_IDENTITY is not set."
@@ -99,10 +100,18 @@ sign_runtime_payload() {
   echo "Signing bundled runtime binaries..."
   while IFS= read -r path; do
     if file "$path" | grep -q "Mach-O"; then
-      if [[ -n "$keychain" ]]; then
-        codesign --force --timestamp --options runtime --keychain "$keychain" --sign "$identity" "$path"
+      if [[ "$path" == */python/bin/python* && -f "$python_entitlements" ]]; then
+        if [[ -n "$keychain" ]]; then
+          codesign --force --timestamp --options runtime --entitlements "$python_entitlements" --keychain "$keychain" --sign "$identity" "$path"
+        else
+          codesign --force --timestamp --options runtime --entitlements "$python_entitlements" --sign "$identity" "$path"
+        fi
       else
-        codesign --force --timestamp --options runtime --sign "$identity" "$path"
+        if [[ -n "$keychain" ]]; then
+          codesign --force --timestamp --options runtime --keychain "$keychain" --sign "$identity" "$path"
+        else
+          codesign --force --timestamp --options runtime --sign "$identity" "$path"
+        fi
       fi
     fi
   done < <(find "$APP_ROOT/runtime" -type f | sort -r)
