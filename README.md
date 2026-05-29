@@ -63,15 +63,12 @@ your data, environment file, and workspace configuration under:
 /Library/Application Support/Mianotes/
 ```
 
-For full search, file parsing, image OCR, and audio/video support on macOS,
-install the local tools Mianotes can use:
+The macOS package bundles the runtime Mianotes needs to run, including Python,
+ripgrep, ffmpeg, and ffprobe. Apple Silicon packages also include a bundled
+Tesseract OCR binary and English OCR data.
 
-```bash
-brew install python ripgrep ffmpeg tesseract
-```
-
-The package checks for Python 3.11+ during installation. `mianotes doctor`
-shows whether the optional parsing tools are available.
+`mianotes doctor` shows which bundled tools are available on the current Mac
+and whether any optional system fallback tools are being used.
 
 The package is built automatically by GitHub Actions when a `v*` tag is pushed.
 The workflow also supports manual runs from the GitHub Actions tab.
@@ -207,6 +204,9 @@ The package workflows can also be run manually from the GitHub Actions tab.
 The macOS package workflow requires these GitHub Actions secrets:
 
 ```text
+APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64
+APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD
+APPLE_DEVELOPER_ID_APPLICATION_IDENTITY
 APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64
 APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD
 APPLE_DEVELOPER_ID_INSTALLER_IDENTITY

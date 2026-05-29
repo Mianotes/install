@@ -23,6 +23,7 @@ jobs:
         run: |
           {
             echo "CERTIFICATE_PATH=$RUNNER_TEMP/developer-id-installer.p12"
+            echo "APPLICATION_CERTIFICATE_PATH=$RUNNER_TEMP/developer-id-application.p12"
             echo "KEYCHAIN_PATH=$RUNNER_TEMP/mianotes-signing.keychain-db"
             echo "NOTARY_KEY_PATH=$RUNNER_TEMP/notary-key.p8"
             echo "SIGNED_PACKAGE_PATH=$RUNNER_TEMP/mianotes-signed.pkg"
@@ -33,6 +34,9 @@ jobs:
           APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64 }}
           APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD }}
           APPLE_DEVELOPER_ID_INSTALLER_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_IDENTITY }}
+          APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD }}
+          APPLE_DEVELOPER_ID_APPLICATION_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_IDENTITY }}
           APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
           APPLE_NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_BASE64 }}
@@ -42,6 +46,9 @@ jobs:
             APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64 \
             APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD \
             APPLE_DEVELOPER_ID_INSTALLER_IDENTITY \
+            APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 \
+            APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD \
+            APPLE_DEVELOPER_ID_APPLICATION_IDENTITY \
             APPLE_NOTARY_KEY_ID \
             APPLE_NOTARY_ISSUER_ID \
             APPLE_NOTARY_KEY_BASE64
@@ -57,14 +64,23 @@ jobs:
         env:
           CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD }}
+          APPLICATION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          APPLICATION_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           printf '%s' "$CERTIFICATE_BASE64" | base64 -D > "$CERTIFICATE_PATH"
+          printf '%s' "$APPLICATION_CERTIFICATE_BASE64" | base64 -D > "$APPLICATION_CERTIFICATE_PATH"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security import "$CERTIFICATE_PATH" \
             -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security import "$APPLICATION_CERTIFICATE_PATH" \
+            -P "$APPLICATION_CERTIFICATE_PASSWORD" \
             -A \
             -t cert \
             -f pkcs12 \
@@ -77,6 +93,9 @@ jobs:
           security find-identity -v -p basic "$KEYCHAIN_PATH"
 
       - name: Build package
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_IDENTITY }}
+          CODESIGN_KEYCHAIN: ${{ env.KEYCHAIN_PATH }}
         run: ./macos/create_package.sh
 
       - name: Sign package

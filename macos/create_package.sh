@@ -28,6 +28,15 @@ find_npm() {
   exit 1
 }
 
+prepare_runtime() {
+  if [[ "${MIANOTES_SKIP_MACOS_RUNTIME:-0}" == "1" ]]; then
+    echo "Skipping bundled macOS runtime."
+    return
+  fi
+
+  "$ROOT_DIR/macos/runtime/fetch_runtime.sh"
+}
+
 clone_repo() {
   local repo_url="$1"
   local ref="$2"
@@ -69,6 +78,36 @@ clean_payload_metadata() {
   find "$PAYLOAD_DIR" -name "._*" -type f -delete
 }
 
+sign_runtime_payload() {
+  local identity="${CODESIGN_IDENTITY:-}"
+  local keychain="${CODESIGN_KEYCHAIN:-}"
+
+  if [[ -z "$identity" ]]; then
+    echo "Skipping bundled runtime code signing; CODESIGN_IDENTITY is not set."
+    return
+  fi
+
+  if ! command -v codesign >/dev/null 2>&1; then
+    echo "codesign is required when CODESIGN_IDENTITY is set." >&2
+    exit 1
+  fi
+
+  if [[ ! -d "$APP_ROOT/runtime" ]]; then
+    return
+  fi
+
+  echo "Signing bundled runtime binaries..."
+  while IFS= read -r path; do
+    if file "$path" | grep -q "Mach-O"; then
+      if [[ -n "$keychain" ]]; then
+        codesign --force --timestamp --options runtime --keychain "$keychain" --sign "$identity" "$path"
+      else
+        codesign --force --timestamp --options runtime --sign "$identity" "$path"
+      fi
+    fi
+  done < <(find "$APP_ROOT/runtime" -type f | sort -r)
+}
+
 rm -rf "$BUILD_DIR" "$DIST_DIR"
 mkdir -p "$SOURCE_DIR" "$PAYLOAD_DIR" "$DIST_DIR"
 
@@ -88,6 +127,9 @@ NPM_BIN="$(find_npm)"
   "$NPM_BIN" run build
 )
 
+echo "Preparing bundled runtime..."
+prepare_runtime
+
 echo "Preparing package payload..."
 APP_ROOT="$PAYLOAD_DIR/Library/Application Support/Mianotes"
 mkdir -p "$APP_ROOT/bin" "$APP_ROOT/dashboard" "$PAYLOAD_DIR/Library/LaunchDaemons" "$PAYLOAD_DIR/usr/local/bin"
@@ -95,13 +137,17 @@ mkdir -p "$APP_ROOT/bin" "$APP_ROOT/dashboard" "$PAYLOAD_DIR/Library/LaunchDaemo
 copy_tree "$SOURCE_DIR/web-service" "$APP_ROOT/web-service"
 copy_tree "$SOURCE_DIR/dashboard/dist" "$APP_ROOT/dashboard/dist"
 copy_tree "$ROOT_DIR/macos/bin" "$APP_ROOT/bin"
+if [[ -d "$BUILD_DIR/runtime" ]]; then
+  copy_tree "$BUILD_DIR/runtime" "$APP_ROOT/runtime"
+fi
 cp "$ROOT_DIR/common/bin/dashboard_server.py" "$APP_ROOT/bin/dashboard_server.py"
 cp "$ROOT_DIR/macos/bin/mianotes" "$PAYLOAD_DIR/usr/local/bin/mianotes"
 cp "$ROOT_DIR/macos/launchd/com.mianotes.web-service.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.web-service.plist"
 cp "$ROOT_DIR/macos/launchd/com.mianotes.dashboard.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.dashboard.plist"
 
-chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" "$APP_ROOT/bin/dashboard_server.py" "$PAYLOAD_DIR/usr/local/bin/mianotes"
+chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" "$APP_ROOT/bin/runtime-env.sh" "$APP_ROOT/bin/dashboard_server.py" "$PAYLOAD_DIR/usr/local/bin/mianotes"
 chmod 644 "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.web-service.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.dashboard.plist"
+sign_runtime_payload
 clean_payload_metadata
 
 echo "Building package..."

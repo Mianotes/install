@@ -4,6 +4,13 @@ set -euo pipefail
 APP_ROOT="/Library/Application Support/Mianotes"
 DASHBOARD_DIR="$APP_ROOT/dashboard/dist"
 ENV_FILE="$APP_ROOT/env/mianotes.env"
+RUNTIME_ENV="$APP_ROOT/bin/runtime-env.sh"
+
+if [[ -f "$RUNTIME_ENV" ]]; then
+  # shellcheck source=/dev/null
+  . "$RUNTIME_ENV"
+  mianotes_export_runtime "$APP_ROOT"
+fi
 
 if [[ -f "$ENV_FILE" ]]; then
   set -a

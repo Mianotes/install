@@ -6,8 +6,15 @@ APP_ROOT="/Library/Application Support/Mianotes"
 ENV_FILE="$APP_ROOT/env/mianotes.env"
 DATA_DIR="$APP_ROOT/data"
 WORKSPACES_CONFIG="$APP_ROOT/workspaces.json"
+RUNTIME_ENV="$APP_ROOT/bin/runtime-env.sh"
 WEB_SERVICE_PLIST="/Library/LaunchDaemons/com.mianotes.web-service.plist"
 DASHBOARD_PLIST="/Library/LaunchDaemons/com.mianotes.dashboard.plist"
+
+if [[ -f "$RUNTIME_ENV" ]]; then
+  # shellcheck source=/dev/null
+  . "$RUNTIME_ENV"
+  mianotes_export_runtime "$APP_ROOT"
+fi
 
 require_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
@@ -73,6 +80,19 @@ case "$COMMAND" in
     [[ -f "$ENV_FILE" ]] && print_check "env" "$ENV_FILE" || print_check "env" "missing"
     [[ -f "$WEB_SERVICE_PLIST" ]] && print_check "web service plist" "$WEB_SERVICE_PLIST" || print_check "web service plist" "missing"
     [[ -f "$DASHBOARD_PLIST" ]] && print_check "dashboard plist" "$DASHBOARD_PLIST" || print_check "dashboard plist" "missing"
+    echo
+    echo "Bundled runtime"
+    if declare -F mianotes_runtime_dir >/dev/null 2>&1; then
+      RUNTIME_DIR="$(mianotes_runtime_dir "$APP_ROOT" 2>/dev/null || true)"
+      [[ -n "$RUNTIME_DIR" && -d "$RUNTIME_DIR" ]] && print_check "runtime" "$RUNTIME_DIR" || print_check "runtime" "missing"
+      [[ -x "$RUNTIME_DIR/python/bin/python3" ]] && print_check "runtime python" "$("$RUNTIME_DIR/python/bin/python3" --version 2>&1)" || print_check "runtime python" "missing"
+      [[ -x "$RUNTIME_DIR/bin/rg" ]] && print_check "runtime rg" "$RUNTIME_DIR/bin/rg" || print_check "runtime rg" "missing"
+      [[ -x "$RUNTIME_DIR/bin/ffmpeg" ]] && print_check "runtime ffmpeg" "$RUNTIME_DIR/bin/ffmpeg" || print_check "runtime ffmpeg" "missing"
+      [[ -x "$RUNTIME_DIR/bin/ffprobe" ]] && print_check "runtime ffprobe" "$RUNTIME_DIR/bin/ffprobe" || print_check "runtime ffprobe" "missing"
+      [[ -x "$RUNTIME_DIR/bin/tesseract" ]] && print_check "runtime tesseract" "$RUNTIME_DIR/bin/tesseract" || print_check "runtime tesseract" "missing"
+    else
+      print_check "runtime" "missing"
+    fi
     echo
     echo "Tools"
     if [[ -x "$APP_ROOT/.venv/bin/python" ]]; then
