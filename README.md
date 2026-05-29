@@ -32,8 +32,9 @@ mianotes open
 
 The package is built automatically by GitHub Actions when a `v*` tag is pushed.
 The workflow also supports manual runs from the GitHub Actions tab.
-The package is not signed or notarized yet; adding Apple Developer signing
-secrets to the workflow is the next step before broad public distribution.
+The release package is signed with a Developer ID Installer certificate,
+submitted to Apple for notarization, and stapled before it is attached to the
+GitHub release.
 
 Build locally on macOS:
 
@@ -135,6 +136,17 @@ https://github.com/Mianotes/install/releases/latest/download/mianotes.deb
 ```
 
 The package workflows can also be run manually from the GitHub Actions tab.
+
+The macOS package workflow requires these GitHub Actions secrets:
+
+```text
+APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64
+APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD
+APPLE_DEVELOPER_ID_INSTALLER_IDENTITY
+APPLE_NOTARY_KEY_ID
+APPLE_NOTARY_ISSUER_ID
+APPLE_NOTARY_KEY_BASE64
+```
 
 ## macOS and Linux
 

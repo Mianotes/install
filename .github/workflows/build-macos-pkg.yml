@@ -13,6 +13,11 @@ jobs:
   build:
     name: Build mianotes.pkg
     runs-on: macos-14
+    env:
+      CERTIFICATE_PATH: ${{ runner.temp }}/developer-id-installer.p12
+      KEYCHAIN_PATH: ${{ runner.temp }}/mianotes-signing.keychain-db
+      NOTARY_KEY_PATH: ${{ runner.temp }}/notary-key.p8
+      SIGNED_PACKAGE_PATH: ${{ runner.temp }}/mianotes-signed.pkg
     steps:
       - name: Check out installer
         uses: actions/checkout@v4
@@ -22,8 +27,60 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Import Developer ID Installer certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          printf '%s' "$CERTIFICATE_BASE64" | base64 -D > "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+          security find-identity -v -p basic "$KEYCHAIN_PATH"
+
       - name: Build package
         run: ./macos/create_package.sh
+
+      - name: Sign package
+        env:
+          SIGNING_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_IDENTITY }}
+        run: |
+          productsign \
+            --keychain "$KEYCHAIN_PATH" \
+            --sign "$SIGNING_IDENTITY" \
+            dist/mianotes.pkg \
+            "$SIGNED_PACKAGE_PATH"
+
+      - name: Notarize package
+        env:
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_BASE64 }}
+        run: |
+          printf '%s' "$APPLE_NOTARY_KEY_BASE64" | base64 -D > "$NOTARY_KEY_PATH"
+          xcrun notarytool submit "$SIGNED_PACKAGE_PATH" \
+            --key "$NOTARY_KEY_PATH" \
+            --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" \
+            --wait
+
+      - name: Staple notarization ticket
+        run: |
+          xcrun stapler staple "$SIGNED_PACKAGE_PATH"
+          pkgutil --check-signature "$SIGNED_PACKAGE_PATH"
+          mv "$SIGNED_PACKAGE_PATH" dist/mianotes.pkg
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
@@ -36,3 +93,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/mianotes.pkg
+
+      - name: Delete temporary keychain
+        if: always()
+        run: security delete-keychain "$KEYCHAIN_PATH" || true
