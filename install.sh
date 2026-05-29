@@ -6,6 +6,7 @@ DASHBOARD_REPO="${MIANOTES_DASHBOARD_REPO:-https://github.com/Mianotes/mianotes-
 INSTALL_DIR="${MIANOTES_INSTALL_DIR:-$(pwd)}"
 REF="${MIANOTES_REF:-}"
 INSTALL_DEV=0
+STARTED_SERVICE_PID=""
 
 usage() {
   cat <<'USAGE'
@@ -119,6 +120,51 @@ run_app_installer() {
   fi
 }
 
+cleanup_started_service() {
+  if [[ -n "$STARTED_SERVICE_PID" ]] && kill -0 "$STARTED_SERVICE_PID" >/dev/null 2>&1; then
+    kill "$STARTED_SERVICE_PID" >/dev/null 2>&1 || true
+  fi
+}
+
+ask_to_start() {
+  if [[ ! -t 0 ]]; then
+    return
+  fi
+
+  local answer
+  printf "\nDo you want me to start Mianotes now? (Y/n) "
+  read -r answer || return
+
+  case "$answer" in
+    ""|[Yy]|[Yy][Ee][Ss])
+      ;;
+    *)
+      return
+      ;;
+  esac
+
+  local service_bin="$WEB_SERVICE_DIR/.venv/bin/mianotes-web-service"
+  if [[ ! -x "$service_bin" ]]; then
+    echo "Could not find $service_bin. Run the web service install step again." >&2
+    exit 1
+  fi
+
+  echo
+  echo "Preparing the Mianotes database..."
+  "$service_bin" init-db
+
+  echo "Starting the web service on http://127.0.0.1:8200 ..."
+  "$service_bin" --host 0.0.0.0 --port 8200 &
+  STARTED_SERVICE_PID=$!
+  trap cleanup_started_service EXIT INT TERM
+
+  echo "Starting the dashboard on http://127.0.0.1:8201 ..."
+  echo "Press Ctrl-C to stop Mianotes."
+  echo
+  cd "$DASHBOARD_DIR"
+  npm run dev
+}
+
 require_command git "Git is required. Install Git, then run the installer again."
 require_command bash "Bash is required."
 
@@ -161,3 +207,5 @@ Run the dashboard during development:
 Then open:
   http://127.0.0.1:8201
 NEXT
+
+ask_to_start
