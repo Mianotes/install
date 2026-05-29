@@ -150,6 +150,7 @@ Installed folders:
 
 Start the web service:
   cd "$WEB_SERVICE_DIR"
+  source .venv/bin/activate
   mianotes-web-service init-db
   mianotes-web-service --host 0.0.0.0 --port 8200
 
