@@ -10,11 +10,6 @@ jobs:
   build:
     name: Build mianotes.pkg
     runs-on: macos-14
-    env:
-      CERTIFICATE_PATH: ${{ runner.temp }}/developer-id-installer.p12
-      KEYCHAIN_PATH: ${{ runner.temp }}/mianotes-signing.keychain-db
-      NOTARY_KEY_PATH: ${{ runner.temp }}/notary-key.p8
-      SIGNED_PACKAGE_PATH: ${{ runner.temp }}/mianotes-signed.pkg
     steps:
       - name: Check out installer
         uses: actions/checkout@v4
@@ -23,6 +18,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Set signing paths
+        run: |
+          {
+            echo "CERTIFICATE_PATH=$RUNNER_TEMP/developer-id-installer.p12"
+            echo "KEYCHAIN_PATH=$RUNNER_TEMP/mianotes-signing.keychain-db"
+            echo "NOTARY_KEY_PATH=$RUNNER_TEMP/notary-key.p8"
+            echo "SIGNED_PACKAGE_PATH=$RUNNER_TEMP/mianotes-signed.pkg"
+          } >> "$GITHUB_ENV"
 
       - name: Check Apple signing secrets
         env:
