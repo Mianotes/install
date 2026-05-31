@@ -90,6 +90,8 @@ case "$COMMAND" in
     command_status "rg"
     command_status "ffmpeg"
     command_status "ffprobe"
+    command_status "flac"
+    command_status "metaflac"
     command_status "tesseract"
     echo
     echo "URLs"

@@ -121,8 +121,9 @@ After installation, Mianotes runs as two systemd services:
 The installer creates a Python virtual environment and installs the web service
 dependencies during package installation, so the first install needs internet
 access.
-The Debian package also installs the required system packages for parsing and
-searching notes, including `ripgrep`, `ffmpeg`, and `tesseract-ocr`.
+The Debian package also installs the required system packages for parsing,
+audio transcription, and searching notes, including `ripgrep`, `ffmpeg`,
+`flac`, and `tesseract-ocr`.
 
 Open the app with:
 

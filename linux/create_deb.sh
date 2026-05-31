@@ -121,7 +121,7 @@ Section: web
 Priority: optional
 Architecture: all
 Maintainer: Mianotes <hello@mianotes.local>
-Depends: python3 (>= 3.11), python3-venv, python3-pip, ca-certificates, systemd, ripgrep, ffmpeg, tesseract-ocr
+Depends: python3 (>= 3.11), python3-venv, python3-pip, ca-certificates, systemd, ripgrep, ffmpeg, flac, tesseract-ocr
 Installed-Size: $INSTALLED_SIZE
 Homepage: https://github.com/Mianotes
 Description: Mianotes web service and dashboard
