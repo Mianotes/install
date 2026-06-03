@@ -154,7 +154,7 @@ cp "$ROOT_DIR/macos/bin/mianotes" "$PAYLOAD_DIR/usr/local/bin/mianotes"
 cp "$ROOT_DIR/macos/launchd/com.mianotes.web-service.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.web-service.plist"
 cp "$ROOT_DIR/macos/launchd/com.mianotes.dashboard.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.dashboard.plist"
 
-chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" "$APP_ROOT/bin/runtime-env.sh" "$APP_ROOT/bin/dashboard_server.py" "$PAYLOAD_DIR/usr/local/bin/mianotes"
+chmod 755 "$APP_ROOT/bin/start-web-service.sh" "$APP_ROOT/bin/start-dashboard.sh" "$APP_ROOT/bin/runtime-env.sh" "$APP_ROOT/bin/mianotes-mcp.sh" "$APP_ROOT/bin/dashboard_server.py" "$PAYLOAD_DIR/usr/local/bin/mianotes"
 chmod 644 "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.web-service.plist" "$PAYLOAD_DIR/Library/LaunchDaemons/com.mianotes.dashboard.plist"
 sign_runtime_payload
 clean_payload_metadata
