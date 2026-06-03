@@ -105,7 +105,6 @@ cp "$ROOT_DIR/linux/scripts/postrm" "$PACKAGE_DIR/DEBIAN/postrm"
 chmod 755 \
   "$APP_ROOT/bin/start-web-service.sh" \
   "$APP_ROOT/bin/start-dashboard.sh" \
-  "$APP_ROOT/bin/mianotes-mcp.sh" \
   "$APP_ROOT/bin/dashboard_server.py" \
   "$PACKAGE_DIR/usr/bin/mianotes" \
   "$PACKAGE_DIR/DEBIAN/preinst" \
