@@ -119,6 +119,7 @@ case "$COMMAND" in
     rm -rf "$APP_ROOT/.venv"
     rm -rf "$APP_ROOT/bin"
     rm -rf "$APP_ROOT/dashboard"
+    rm -rf "$APP_ROOT/runtime"
     rm -rf "$APP_ROOT/web-service"
     rm -f /usr/local/bin/mianotes
     pkgutil --forget com.mianotes.installer >/dev/null 2>&1 || true
