@@ -168,10 +168,60 @@ The local build output is:
 dist/mianotes.deb
 ```
 
+## Docker image
+
+Mianotes also ships as a single combined Docker image for servers, NAS devices,
+and teams that prefer container deployment.
+
+The image runs both services:
+
+- Mianotes web service on port `8200`
+- Mianotes dashboard on port `8201`
+
+Start it with Docker Compose:
+
+```bash
+mkdir mianotes
+cd mianotes
+curl -fsSL https://raw.githubusercontent.com/Mianotes/install/main/docker-compose.yml -o docker-compose.yml
+docker compose up -d
+```
+
+Then open:
+
+```text
+http://localhost:8201
+```
+
+The Compose file stores Mianotes data in the local `data/` folder:
+
+```text
+mianotes/
+  docker-compose.yml
+  data/
+    system.db
+    workspaces/
+    markdown/
+    html/
+```
+
+The Docker image includes the runtime dependencies needed for parsing, audio,
+search, and OCR, including `ripgrep`, `ffmpeg`, `flac`, and `tesseract-ocr`.
+
+The image is published to GitHub Container Registry:
+
+```text
+ghcr.io/mianotes/mianotes:latest
+```
+
+The Docker image is built automatically by GitHub Actions when a `v*` tag is
+pushed. The workflow also supports manual runs from the GitHub Actions tab and
+publishes an `edge` tag for manual builds.
+
 ## Release process
 
-The macOS and Ubuntu packages are built by GitHub Actions when a `v*` tag is
-pushed to this repository.
+The macOS package, Ubuntu package, and Docker image are built by GitHub Actions
+when a `v*` tag is pushed to this repository.
 
 ```bash
 git tag v0.1.2
@@ -191,6 +241,8 @@ release commits on `main`. The workflows build:
 
 - `dist/mianotes.pkg`
 - `dist/mianotes.deb`
+- `ghcr.io/mianotes/mianotes:<version>`
+- `ghcr.io/mianotes/mianotes:latest`
 
 On tag builds, both files are attached to the GitHub Release. Users can install
 the latest release from:
@@ -200,7 +252,8 @@ https://github.com/Mianotes/install/releases/latest/download/mianotes.pkg
 https://github.com/Mianotes/install/releases/latest/download/mianotes.deb
 ```
 
-The package workflows can also be run manually from the GitHub Actions tab.
+The package and Docker workflows can also be run manually from the GitHub
+Actions tab.
 
 The macOS package workflow requires these GitHub Actions secrets:
 
