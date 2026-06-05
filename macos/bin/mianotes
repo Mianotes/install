@@ -6,9 +6,11 @@ APP_ROOT="/Library/Application Support/Mianotes"
 ENV_FILE="$APP_ROOT/env/mianotes.env"
 DATA_DIR="$APP_ROOT/data"
 WORKSPACES_CONFIG="$APP_ROOT/workspaces.json"
+OLD_STORAGE_CONFIG="$APP_ROOT/storage.json"
 RUNTIME_ENV="$APP_ROOT/bin/runtime-env.sh"
 WEB_SERVICE_PLIST="/Library/LaunchDaemons/com.mianotes.web-service.plist"
 DASHBOARD_PLIST="/Library/LaunchDaemons/com.mianotes.dashboard.plist"
+LOG_DIR="/Library/Logs/Mianotes"
 
 if [[ -f "$RUNTIME_ENV" ]]; then
   # shellcheck source=/dev/null
@@ -48,6 +50,14 @@ launchd_status() {
   else
     print_check "$label" "not running"
   fi
+}
+
+remove_system_state() {
+  rm -rf "$APP_ROOT/env"
+  rm -f "$WORKSPACES_CONFIG" "$OLD_STORAGE_CONFIG"
+  rm -f "$DATA_DIR/system.db" "$DATA_DIR/system.db-wal" "$DATA_DIR/system.db-shm" "$DATA_DIR/system.db-journal"
+  rm -rf "$DATA_DIR/workspaces"
+  rm -rf "$LOG_DIR"
 }
 
 case "$COMMAND" in
@@ -121,17 +131,19 @@ case "$COMMAND" in
     rm -rf "$APP_ROOT/dashboard"
     rm -rf "$APP_ROOT/runtime"
     rm -rf "$APP_ROOT/web-service"
+    remove_system_state
     rm -f /usr/local/bin/mianotes
     pkgutil --forget com.mianotes.installer >/dev/null 2>&1 || true
     cat <<UNINSTALLED
 Mianotes has been uninstalled.
 
-Your data has been kept at:
+Mianotes settings, users, API keys, workspace configuration, and workspace
+databases have been removed.
+
+Your Markdown notes, source files, and published HTML have been kept under:
   $APP_ROOT/data
 
-Your environment and workspace configuration have also been kept:
-  $APP_ROOT/env
-  $APP_ROOT/workspaces.json
+To use those files again, reinstall Mianotes and add the folder as a workspace.
 UNINSTALLED
     ;;
   logs)

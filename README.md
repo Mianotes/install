@@ -56,12 +56,16 @@ mianotes logs
 mianotes uninstall
 ```
 
-`mianotes uninstall` removes the app services and installed app files, but keeps
-your data, environment file, and workspace configuration under:
+`mianotes uninstall` removes the app services, installed app files, settings,
+users, API keys, workspace configuration, and workspace databases. It keeps
+Markdown notes, source files, and published HTML under:
 
 ```text
-/Library/Application Support/Mianotes/
+/Library/Application Support/Mianotes/data/
 ```
+
+After reinstalling Mianotes, add a folder as a workspace to import compatible
+Markdown notes again.
 
 The macOS package bundles the runtime Mianotes needs to run, including Python,
 ripgrep, ffmpeg, and ffprobe. Apple Silicon packages also include a bundled
@@ -149,9 +153,13 @@ mianotes logs
 mianotes uninstall
 ```
 
-`mianotes uninstall` removes the app services and installed app files, but keeps
-your data under `/var/lib/mianotes/` and environment configuration under
-`/etc/mianotes/`.
+`mianotes uninstall` removes the app services, installed app files, settings,
+users, API keys, workspace configuration, and workspace databases. It keeps
+Markdown notes, source files, and published HTML under
+`/var/lib/mianotes/data/`.
+
+After reinstalling Mianotes, add a folder as a workspace to import compatible
+Markdown notes again.
 
 The package is built automatically by GitHub Actions when a `v*` tag is pushed.
 The workflow also supports manual runs from the GitHub Actions tab.

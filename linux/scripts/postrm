@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ACTION="${1:-remove}"
+DATA_DIR="/var/lib/mianotes/data"
+
+remove_system_state() {
+  rm -rf /etc/mianotes
+  rm -f /var/lib/mianotes/workspaces.json /var/lib/mianotes/storage.json
+  rm -f "$DATA_DIR/system.db" "$DATA_DIR/system.db-wal" "$DATA_DIR/system.db-shm" "$DATA_DIR/system.db-journal"
+  rm -rf "$DATA_DIR/workspaces"
+  rm -rf /var/log/mianotes
+}
+
+case "$ACTION" in
+  remove|purge)
+    remove_system_state
+    ;;
+esac
+
 if command -v systemctl >/dev/null 2>&1; then
   systemctl daemon-reload || true
 fi
