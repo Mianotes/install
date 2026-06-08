@@ -52,6 +52,22 @@ launchd_status() {
   fi
 }
 
+start_launchd_service() {
+  local label="$1"
+  local plist="$2"
+
+  if [[ ! -f "$plist" ]]; then
+    echo "Could not find $plist. Reinstall Mianotes and try again." >&2
+    exit 1
+  fi
+
+  if ! launchctl print "system/$label" >/dev/null 2>&1; then
+    sudo launchctl bootstrap system "$plist"
+  fi
+
+  sudo launchctl kickstart -k "system/$label"
+}
+
 remove_system_state() {
   rm -rf "$APP_ROOT/env"
   rm -f "$WORKSPACES_CONFIG" "$OLD_STORAGE_CONFIG"
@@ -69,12 +85,18 @@ case "$COMMAND" in
     launchctl print system/com.mianotes.dashboard || true
     ;;
   start)
-    sudo launchctl kickstart -k system/com.mianotes.web-service
-    sudo launchctl kickstart -k system/com.mianotes.dashboard
+    start_launchd_service "com.mianotes.web-service" "$WEB_SERVICE_PLIST"
+    start_launchd_service "com.mianotes.dashboard" "$DASHBOARD_PLIST"
     ;;
   stop)
-    sudo launchctl bootout system /Library/LaunchDaemons/com.mianotes.dashboard.plist 2>/dev/null || true
-    sudo launchctl bootout system /Library/LaunchDaemons/com.mianotes.web-service.plist 2>/dev/null || true
+    sudo launchctl bootout system "$DASHBOARD_PLIST" 2>/dev/null || true
+    sudo launchctl bootout system "$WEB_SERVICE_PLIST" 2>/dev/null || true
+    ;;
+  restart)
+    sudo launchctl bootout system "$DASHBOARD_PLIST" 2>/dev/null || true
+    sudo launchctl bootout system "$WEB_SERVICE_PLIST" 2>/dev/null || true
+    start_launchd_service "com.mianotes.web-service" "$WEB_SERVICE_PLIST"
+    start_launchd_service "com.mianotes.dashboard" "$DASHBOARD_PLIST"
     ;;
   doctor)
     echo "Mianotes doctor"
@@ -122,8 +144,8 @@ case "$COMMAND" in
     ;;
   uninstall)
     require_root "$COMMAND"
-    launchctl bootout system /Library/LaunchDaemons/com.mianotes.dashboard.plist 2>/dev/null || true
-    launchctl bootout system /Library/LaunchDaemons/com.mianotes.web-service.plist 2>/dev/null || true
+    launchctl bootout system "$DASHBOARD_PLIST" 2>/dev/null || true
+    launchctl bootout system "$WEB_SERVICE_PLIST" 2>/dev/null || true
     rm -f /Library/LaunchDaemons/com.mianotes.dashboard.plist
     rm -f /Library/LaunchDaemons/com.mianotes.web-service.plist
     rm -rf "$APP_ROOT/.venv"
@@ -151,7 +173,7 @@ UNINSTALLED
     ;;
   *)
     cat <<'USAGE'
-Usage: mianotes [open|status|start|stop|doctor|uninstall|logs]
+Usage: mianotes [open|status|start|stop|restart|doctor|uninstall|logs]
 USAGE
     exit 2
     ;;
